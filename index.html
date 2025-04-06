@@ -86,14 +86,14 @@
       padding: 15px 10px;
       min-width: 80px;
       border-radius: 8px;
-      background-color: #FFF176; /* 부드러운 노란색 */
+      background-color: #FFF176;
       border: 1px solid #ccc;
       cursor: pointer;
       white-space: nowrap;
       transition: background-color 0.2s;
     }
     .keypad button:active {
-      background-color: #FFEE58; /* 눌렀을 때 더 진한 노랑 */
+      background-color: #FFEE58;
     }
     .keypad .empty {
       visibility: hidden;
@@ -111,7 +111,7 @@
 
   <div>
     <span style="font-size: 24px;"></span>
-    <input type="text" id="phone" maxlength="8" placeholder="출석번호 4자리" />
+    <input type="text" id="phone" maxlength="4" placeholder="출석번호 4자리" />
   </div>
 
   <div class="keypad">
@@ -164,7 +164,7 @@
     }
 
     function appendNumber(num) {
-      if (phoneInput.value.length < 8) {
+      if (phoneInput.value.length < 4) {
         phoneInput.value += num;
         phoneInput.dispatchEvent(new Event("input"));
       }
@@ -183,7 +183,7 @@
     phoneInput.addEventListener("input", async () => {
       const value = phoneInput.value;
 
-      if (value.length < 8) {
+      if (value.length < 4) {
         attendBtn.style.display = "none";
         leaveBtn.style.display = "none";
         studentId = null;
