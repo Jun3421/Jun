@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>새봄수학 출석 체크</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      padding: 40px;
+    }
+    img.logo {
+      max-width: 300px;
+      margin-bottom: 20px;
+    }
+    h1.title {
+      font-size: 32px;
+      font-weight: bold;
+      margin-bottom: 30px;
+    }
+    input {
+      font-size: 24px;
+      padding: 10px;
+      width: 250px;
+      text-align: center;
+    }
+    .button-container {
+      margin-top: 20px;
+    }
+    button.action-btn {
+      position: relative;
+      font-size: 24px;
+      padding: 20px 50px;
+      margin: 20px;
+      border: none;
+      border-radius: 10px;
+      color: white;
+      cursor: pointer;
+      display: none;
+    }
+    #attendBtn {
+      background-color: #4CAF50;
+    }
+    #leaveBtn {
+      background-color: #FF9800;
+    }
+    .button-icon {
+      position: absolute;
+      top: 8px;
+      left: 8px;
+      width: 30px;
+      height: 30px;
+    }
+    #toast {
+      visibility: hidden;
+      min-width: 250px;
+      background-color: #333;
+      color: #fff;
+      text-align: center;
+      border-radius: 20px;
+      padding: 16px;
+      position: fixed;
+      z-index: 1;
+      left: 50%;
+      bottom: 100px;
+      transform: translateX(-50%);
+      font-size: 20px;
+      opacity: 0;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    #toast.show {
+      visibility: visible;
+      opacity: 1;
+    }
+
+    .keypad {
+      display: grid;
+      grid-template-columns: repeat(4, 80px);
+      gap: 10px;
+      width: max-content;
+      margin: 30px auto 0;
+    }
+    .keypad button {
+      font-size: 20px;
+      padding: 15px 10px;
+      min-width: 80px;
+      border-radius: 8px;
+      background-color: #FFF176; /* 부드러운 노란색 */
+      border: 1px solid #ccc;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background-color 0.2s;
+    }
+    .keypad button:active {
+      background-color: #FFEE58; /* 눌렀을 때 더 진한 노랑 */
+    }
+    .keypad .empty {
+      visibility: hidden;
+    }
+    .keypad button.clear-all {
+      width: 130px;
+      grid-column: 4;
+      grid-row: 2;
+    }
+  </style>
+</head>
+<body>
+  <img src="새봄수학 로고.jpg" alt="새봄수학 로고" class="logo" />
+  <h1 class="title">새봄수학 출석 체크</h1>
+
+  <div>
+    <span style="font-size: 24px;">010</span>
+    <input type="text" id="phone" maxlength="8" placeholder="전화번호 뒷 8자리" readonly />
+  </div>
+
+  <div class="keypad">
+    <button onclick="appendNumber('1')">1</button>
+    <button onclick="appendNumber('2')">2</button>
+    <button onclick="appendNumber('3')">3</button>
+    <button onclick="clearLast()">지우기</button>
+
+    <button onclick="appendNumber('4')">4</button>
+    <button onclick="appendNumber('5')">5</button>
+    <button onclick="appendNumber('6')">6</button>
+    <button class="clear-all" onclick="clearAll()">전체 지우기</button>
+
+    <button onclick="appendNumber('7')">7</button>
+    <button onclick="appendNumber('8')">8</button>
+    <button onclick="appendNumber('9')">9</button>
+    <div class="empty"></div>
+
+    <div class="empty"></div>
+    <button onclick="appendNumber('0')">0</button>
+    <div class="empty"></div>
+    <div class="empty"></div>
+  </div>
+
+  <div class="button-container">
+    <button id="attendBtn" class="action-btn">
+      <img src="새봄수학 나비.png" alt="나비" class="button-icon" />
+      등원하기
+    </button>
+    <button id="leaveBtn" class="action-btn">
+      <img src="새봄수학 나비.png" alt="나비" class="button-icon" />
+      하원하기
+    </button>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    const phoneInput = document.getElementById("phone");
+    const attendBtn = document.getElementById("attendBtn");
+    const leaveBtn = document.getElementById("leaveBtn");
+    const toast = document.getElementById("toast");
+
+    let studentId = null;
+
+    function showMessage(message) {
+      toast.textContent = message;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 2500);
+    }
+
+    function appendNumber(num) {
+      if (phoneInput.value.length < 8) {
+        phoneInput.value += num;
+        phoneInput.dispatchEvent(new Event("input"));
+      }
+    }
+
+    function clearLast() {
+      phoneInput.value = phoneInput.value.slice(0, -1);
+      phoneInput.dispatchEvent(new Event("input"));
+    }
+
+    function clearAll() {
+      phoneInput.value = "";
+      phoneInput.dispatchEvent(new Event("input"));
+    }
+
+    phoneInput.addEventListener("input", async () => {
+      const value = phoneInput.value;
+
+      if (value.length < 8) {
+        attendBtn.style.display = "none";
+        leaveBtn.style.display = "none";
+        studentId = null;
+        return;
+      }
+
+      const fullPhone = "010" + value;
+
+      try {
+        const res = await fetch("https://hook.eu2.make.com/9dd87suorv1xcyt1e19p3qtmmgqpwi5a", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ phone: fullPhone })
+        });
+
+        const data = await res.json();
+
+        if (!data || !data.id || !data.status) {
+          showMessage("학생 정보를 찾을 수 없습니다.");
+          setTimeout(() => clearAll(), 1000);
+          return;
+        }
+
+        studentId = data.id;
+
+        attendBtn.style.display = "none";
+        leaveBtn.style.display = "none";
+
+        if (data.status === "등원") {
+          leaveBtn.style.display = "inline-block";
+        } else {
+          attendBtn.style.display = "inline-block";
+        }
+      } catch (error) {
+        showMessage("서버 오류가 발생했습니다.");
+        console.error(error);
+      }
+    });
+
+    attendBtn.addEventListener("click", () => updateAttendance("등원"));
+    leaveBtn.addEventListener("click", () => updateAttendance("하원"));
+
+    async function updateAttendance(status) {
+      if (!studentId) return;
+
+      try {
+        await fetch("https://hook.eu2.make.com/y61v6w3pgbv75884j7mzjin43nv3i2xz", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: studentId, status })
+        });
+
+        showMessage(`"${status}" 처리되었습니다!`);
+        clearAll();
+      } catch (error) {
+        showMessage("출석 처리 중 오류가 발생했습니다.");
+        console.error(error);
+      }
+    }
+  </script>
+</body>
+</html>
